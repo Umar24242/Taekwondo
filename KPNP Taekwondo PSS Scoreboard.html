@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPNP Taekwondo PSS Scoreboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Orbitron (Digital Numbers) & Montserrat/Inter (KPNP Typography) -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        .digital-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Split Radial Gradients matching KPNP Screen */
+        .bg-blue-corner {
+            background: radial-gradient(circle at 30% 50%, #1e40af 0%, #030712 90%);
+        }
+
+        .bg-red-corner {
+            background: radial-gradient(circle at 70% 50%, #b91c1c 0%, #030712 90%);
+        }
+
+        /* Inner Score Rectangles */
+        .score-box-blue {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(59, 130, 246, 0.5);
+        }
+
+        .score-box-red {
+            background: linear-gradient(135deg, #dc2626 0%, #881337 100%);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(239, 68, 68, 0.5);
+        }
+
+        /* Central Pillar Sections */
+        .center-pillar {
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+        }
+
+        .timer-yellow-box {
+            background-color: #facc15; /* Bright Yellow */
+            color: #000000;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.15);
+        }
+
+        /* Hit Flash Animations */
+        @keyframes flashBlue {
+            0% { background-color: #60a5fa; }
+            100% { background-color: #1d4ed8; }
+        }
+
+        @keyframes flashRed {
+            0% { background-color: #f87171; }
+            100% { background-color: #dc2626; }
+        }
+
+        .flash-blue {
+            animation: flashBlue 0.3s ease-out;
+        }
+
+        .flash-red {
+            animation: flashRed 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between bg-black text-white relative">
+
+    <!-- TOP BRANDING HEADER -->
+    <header class="w-full h-[8vh] min-h-[50px] bg-black px-6 flex justify-between items-center z-20 border-b border-zinc-900">
+        <!-- Left Logos: World Taekwondo & KPNP -->
+        <div class="flex items-center space-x-6">
+            <!-- World Taekwondo Inspired Logo -->
+            <div class="flex items-center space-x-2">
+                <svg class="w-8 h-8" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="45" stroke="white" stroke-width="4"/>
+                    <path d="M25 45 C40 20, 60 20, 75 40 C60 40, 45 45, 25 45 Z" fill="#ef4444"/>
+                    <path d="M25 55 C40 80, 60 80, 75 60 C60 60, 45 55, 25 55 Z" fill="#3b82f6"/>
+                    <path d="M20 50 Q50 35 80 50 Q50 65 20 50 Z" fill="#f59e0b"/>
+                </svg>
+                <div class="leading-none text-left hidden sm:block">
+                    <span class="text-[10px] tracking-widest text-zinc-400 font-bold block">WORLD</span>
+                    <span class="text-xs tracking-wider text-white font-black block">TAEKWONDO</span>
+                </div>
+            </div>
+
+            <!-- KPNP Logo -->
+            <div class="flex items-center space-x-2 pl-4 border-l border-zinc-800">
+                <!-- Double Arrow KPNP Symbol -->
+                <div class="flex items-center font-black text-xl text-white tracking-tighter">
+                    <span class="text-white">&gt;&gt;</span>
+                </div>
+                <span class="font-black text-xl md:text-2xl tracking-widest text-white">KPNP</span>
+            </div>
+        </div>
+
+        <!-- Center Quick Audio Sensor Level Indicator -->
+        <div class="hidden md:flex items-center space-x-2 bg-zinc-900/80 px-3 py-1 rounded-full border border-zinc-800">
+            <span class="text-[10px] font-bold text-zinc-400">MIC SENSOR:</span>
+            <div class="w-24 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <div id="topAudioBar" class="h-full bg-cyan-400 w-0 transition-all duration-75"></div>
+            </div>
+        </div>
+
+        <!-- Right Icons: Helmet & Body Protector -->
+        <div class="flex items-center space-x-4 text-zinc-400">
+            <!-- Head Protector Icon -->
+            <svg class="w-6 h-6 md:w-8 md:h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12c0 3.69 2.47 6.86 6 8.25V22h8v-1.75c3.53-1.39 6-4.56 6-8.25 0-5.52-4.48-10-10-10zm-3 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+            </svg>
+            <!-- Body Protector (Hogu) Icon -->
+            <svg class="w-6 h-6 md:w-8 md:h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3zm0 4c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
+            </svg>
+        </div>
+    </header>
+
+    <!-- MAIN KPNP SCOREBOARD LAYOUT -->
+    <main class="flex-1 w-full grid grid-cols-2 relative overflow-hidden">
+
+        <!-- BLUE CORNER (LEFT HALF) -->
+        <div class="bg-blue-corner h-full w-full flex items-center justify-start pl-[5vw] pr-[2vw] relative">
+            <!-- Blue Score Box -->
+            <div id="blueScoreBox" onclick="triggerHit('blue', 1)" class="score-box-blue cursor-pointer w-[32vw] max-w-[450px] h-[55vh] rounded-xl flex items-center justify-center transition-all">
+                <span id="blueScore" class="digital-font text-[14vw] md:text-[180px] font-black text-white leading-none tracking-tight">
+                    0
+                </span>
+            </div>
+
+            <!-- Gam-Jeom (Left Bottom) -->
+            <div class="absolute bottom-6 left-8 flex flex-col items-start space-y-1">
+                <div class="flex space-x-2 items-center mb-1">
+                    <span id="blueGamDot1" class="w-4 h-4 rounded-full border border-zinc-400 bg-zinc-900"></span>
+                    <span id="blueGamDot2" class="w-4 h-4 rounded-full border border-zinc-400 bg-zinc-900"></span>
+                    <span id="blueGamVal" class="text-zinc-300 font-extrabold text-sm ml-1">0</span>
+                </div>
+                <span class="text-xs md:text-sm font-extrabold tracking-widest text-zinc-300 uppercase">GAM-JEOM</span>
+            </div>
+        </div>
+
+        <!-- RED CORNER (RIGHT HALF) -->
+        <div class="bg-red-corner h-full w-full flex items-center justify-end pr-[5vw] pl-[2vw] relative">
+            <!-- Red Score Box -->
+            <div id="redScoreBox" class="score-box-red w-[32vw] max-w-[450px] h-[55vh] rounded-xl flex items-center justify-center transition-all">
+                <span id="redScore" class="digital-font text-[14vw] md:text-[180px] font-black text-white leading-none tracking-tight">
+                    0
+                </span>
+            </div>
+
+            <!-- Gam-Jeom (Right Bottom) -->
+            <div class="absolute bottom-6 right-8 flex flex-col items-end space-y-1">
+                <div class="flex space-x-2 items-center mb-1">
+                    <span id="redGamVal" class="text-zinc-300 font-extrabold text-sm mr-1">0</span>
+                    <span id="redGamDot1" class="w-4 h-4 rounded-full border border-zinc-400 bg-zinc-900"></span>
+                    <span id="redGamDot2" class="w-4 h-4 rounded-full border border-zinc-400 bg-zinc-900"></span>
+                </div>
+                <span class="text-xs md:text-sm font-extrabold tracking-widest text-zinc-300 uppercase">GAM-JEOM</span>
+            </div>
+        </div>
+
+        <!-- CENTER VERTICAL PILLAR (MATCH - TIMER - ROUND) -->
+        <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[22vw] max-w-[300px] bg-black flex flex-col justify-between items-center z-10 border-x-4 border-zinc-950 center-pillar">
+            
+            <!-- TOP SECTION: MATCH -->
+            <div class="w-full flex-1 bg-black flex flex-col justify-center items-center py-2 border-b-2 border-zinc-900">
+                <span class="text-xs md:text-sm font-extrabold tracking-widest text-zinc-200">MATCH</span>
+                <span id="matchNumDisplay" class="digital-font text-2xl md:text-4xl font-extrabold text-white mt-1">101</span>
+            </div>
+
+            <!-- MIDDLE SECTION: TIMER (BRIGHT YELLOW RECTANGLE) -->
+            <div class="w-full h-[22vh] min-h-[140px] timer-yellow-box flex items-center justify-center border-y-4 border-black my-1">
+                <span id="timerDisplay" class="digital-font text-[6.5vw] md:text-[85px] font-black tracking-tight leading-none">
+                    2:00
+                </span>
+            </div>
+
+            <!-- BOTTOM SECTION: ROUND -->
+            <div class="w-full flex-1 bg-black flex flex-col justify-center items-center py-2 border-t-2 border-zinc-900">
+                <span class="text-xs md:text-sm font-extrabold tracking-widest text-zinc-200">ROUND</span>
+                <span id="roundDisplay" class="digital-font text-3xl md:text-5xl font-black text-white mt-1">1</span>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FLOATING CONTROL & MIC CALIBRATION TOOLBAR -->
+    <div class="fixed bottom-3 left-1/2 -translate-x-1/2 z-30 bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 rounded-2xl px-4 py-2.5 shadow-2xl flex items-center space-x-3 text-xs">
+        
+        <!-- Timer Controls -->
+        <button id="startPauseBtn" onclick="toggleTimer()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-3 py-1.5 rounded-lg flex items-center space-x-1 transition active:scale-95">
+            <span id="playIcon">▶</span>
+            <span id="startPauseLabel">START</span>
+        </button>
+
+        <button onclick="resetMatch()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold px-2.5 py-1.5 rounded-lg transition active:scale-95">
+            RESET
+        </button>
+
+        <div class="h-6 w-px bg-zinc-700"></div>
+
+        <!-- Mic Toggle & Threshold Slider -->
+        <button id="micBtn" onclick="toggleMic()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-2.5 py-1.5 rounded-lg font-bold flex items-center space-x-1.5 transition">
+            <span id="micDot" class="w-2 h-2 rounded-full bg-red-500"></span>
+            <span id="micText">MIC OFF</span>
+        </button>
+
+        <div class="flex items-center space-x-2 bg-black/40 px-2 py-1 rounded-lg border border-zinc-800">
+            <span class="text-[10px] text-zinc-400 font-bold">SEN:</span>
+            <input type="range" id="sensSlider" min="0.02" max="0.50" step="0.01" value="0.12" oninput="setSensitivity(this.value)" class="w-16 accent-blue-500 cursor-pointer h-1 bg-zinc-700 rounded">
+            <span id="sensVal" class="text-[10px] text-cyan-400 font-mono w-6">0.12</span>
+        </div>
+
+        <button onclick="calibrateMic()" class="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 px-2 py-1.5 rounded-lg font-bold text-[10px]">
+            KALIBRASI
+        </button>
+
+        <div class="h-6 w-px bg-zinc-700"></div>
+
+        <!-- Gam-Jeom Controls -->
+        <div class="flex items-center space-x-1">
+            <button onclick="addGamJeom('blue')" class="bg-blue-900/60 hover:bg-blue-800 border border-blue-500/50 text-blue-200 px-2 py-1 rounded text-[10px] font-bold">+GAM BLUE</button>
+            <button onclick="addGamJeom('red')" class="bg-red-900/60 hover:bg-red-800 border border-red-500/50 text-red-200 px-2 py-1 rounded text-[10px] font-bold">+GAM RED</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Score & State Variables
+        let scores = { blue: 0, red: 0 };
+        let gamJeoms = { blue: 0, red: 0 };
+        let currentRound = 1;
+        const totalRounds = 3;
+        let timeLeft = 120; // 2:00 minutes per round
+        let timerInterval = null;
+        let isRunning = false;
+        let aiInterval = null;
+
+        // Audio Detection Variables
+        let audioCtx = null;
+        let analyser = null;
+        let micStream = null;
+        let isMicOn = false;
+        let threshold = 0.12;
+        let lastHitTime = 0;
+        let animFrameId = null;
+
+        // Web Audio Synthesizer Sound Effects
+        const synthCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playBeep(type) {
+            if (synthCtx.state === 'suspended') synthCtx.resume();
+            const osc = synthCtx.createOscillator();
+            const gain = synthCtx.createGain();
+            osc.connect(gain);
+            gain.connect(synthCtx.destination);
+
+            if (type === 'hit') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, synthCtx.currentTime);
+                osc.frequency.setValueAtTime(900, synthCtx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.3, synthCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, synthCtx.currentTime + 0.25);
+                osc.start();
+                osc.stop(synthCtx.currentTime + 0.25);
+            } else if (type === 'buzzer') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, synthCtx.currentTime);
+                gain.gain.setValueAtTime(0.4, synthCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, synthCtx.currentTime + 1.0);
+                osc.start();
+                osc.stop(synthCtx.currentTime + 1.0);
+            }
+        }
+
+        // Sensitivity Handler
+        function setSensitivity(val) {
+            threshold = parseFloat(val);
+            document.getElementById('sensVal').innerText = threshold.toFixed(2);
+        }
+
+        // Toggle Microphone Input
+        async function toggleMic() {
+            if (!isMicOn) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: { echoCancellation: true, noiseSuppression: true },
+                        video: false
+                    });
+
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioCtx.createAnalyser();
+                    micStream = audioCtx.createMediaStreamSource(stream);
+                    analyser.fftSize = 512;
+                    micStream.connect(analyser);
+
+                    isMicOn = true;
+                    document.getElementById('micText').innerText = "MIC ON";
+                    document.getElementById('micDot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                    
+                    listenToRMS();
+                } catch (err) {
+                    alert("Akses Mikrofon ditolak atau tidak didukung oleh browser Anda.");
+                }
+            } else {
+                if (audioCtx) audioCtx.close();
+                cancelAnimationFrame(animFrameId);
+                isMicOn = false;
+                document.getElementById('micText').innerText = "MIC OFF";
+                document.getElementById('micDot').className = "w-2 h-2 rounded-full bg-red-500";
+                document.getElementById('topAudioBar').style.width = "0%";
+            }
+        }
+
+        // Real-time Audio RMS Detection Loop
+        function listenToRMS() {
+            if (!isMicOn) return;
+
+            let bufferLength = analyser.frequencyBinCount;
+            let dataArray = new Float32Array(bufferLength);
+            analyser.getFloatTimeDomainData(dataArray);
+
+            // Compute RMS Volume
+            let sumSquares = 0.0;
+            for (let i = 0; i < bufferLength; i++) {
+                sumSquares += dataArray[i] * dataArray[i];
+            }
+            let rms = Math.sqrt(sumSquares / bufferLength);
+
+            // Visualizer Bar
+            let barWidth = Math.min(100, (rms / 0.35) * 100);
+            document.getElementById('topAudioBar').style.width = barWidth + "%";
+
+            // Trigger score on high sound impact when timer is active
+            let now = Date.now();
+            if (rms >= threshold && isRunning && (now - lastHitTime > 300)) {
+                lastHitTime = now;
+                let pts = rms > threshold * 2.0 ? 2 : 1;
+                triggerHit('blue', pts);
+            }
+
+            animFrameId = requestAnimationFrame(listenToRMS);
+        }
+
+        // Auto Calibrate Background Noise
+        function calibrateMic() {
+            if (!isMicOn) {
+                alert("Aktifkan mikrofon terlebih dahulu!");
+                return;
+            }
+            let samples = [];
+            let start = Date.now();
+
+            function sample() {
+                let bufferLength = analyser.frequencyBinCount;
+                let dataArray = new Float32Array(bufferLength);
+                analyser.getFloatTimeDomainData(dataArray);
+
+                let sumSquares = 0.0;
+                for (let i = 0; i < bufferLength; i++) {
+                    sumSquares += dataArray[i] * dataArray[i];
+                }
+                samples.push(Math.sqrt(sumSquares / bufferLength));
+
+                if (Date.now() - start < 1200) {
+                    requestAnimationFrame(sample);
+                } else {
+                    let avgNoise = samples.reduce((a, b) => a + b, 0) / samples.length;
+                    let calculated = Math.max(0.04, Math.min(0.40, avgNoise * 3.2));
+                    setSensitivity(calculated.toFixed(2));
+                    document.getElementById('sensSlider').value = calculated.toFixed(2);
+                }
+            }
+            sample();
+        }
+
+        // Add Points & Flash Effect
+        function triggerHit(corner, pts) {
+            scores[corner] += pts;
+            document.getElementById(corner + 'Score').innerText = scores[corner];
+            playBeep('hit');
+
+            const box = document.getElementById(corner + 'ScoreBox');
+            box.classList.add(corner === 'blue' ? 'flash-blue' : 'flash-red');
+            setTimeout(() => {
+                box.classList.remove('flash-blue', 'flash-red');
+            }, 300);
+        }
+
+        // Gam-Jeom Handler
+        function addGamJeom(corner) {
+            if (gamJeoms[corner] < 2) {
+                gamJeoms[corner]++;
+                document.getElementById(corner + 'GamVal').innerText = gamJeoms[corner];
+                document.getElementById(corner + 'GamDot' + gamJeoms[corner]).className = "w-4 h-4 rounded-full bg-amber-500 border border-amber-400";
+                
+                // Opposite Corner gets +1 Point
+                let opp = corner === 'blue' ? 'red' : 'blue';
+                triggerHit(opp, 1);
+            }
+        }
+
+        // Timer Control
+        function toggleTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                document.getElementById('startPauseLabel').innerText = "PAUSE";
+                document.getElementById('playIcon').innerText = "❚❚";
+
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        endRound();
+                    }
+                }, 1000);
+
+                // Start Random AI Attack Timer for Red Corner
+                scheduleAiAttack();
+            } else {
+                isRunning = false;
+                document.getElementById('startPauseLabel').innerText = "START";
+                document.getElementById('playIcon').innerText = "▶";
+                clearInterval(timerInterval);
+                clearTimeout(aiInterval);
+            }
+        }
+
+        function updateTimerDisplay() {
+            let m = Math.floor(timeLeft / 60);
+            let s = timeLeft % 60;
+            document.getElementById('timerDisplay').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        // Random Red Corner Opponent Attack Logic
+        function scheduleAiAttack() {
+            if (!isRunning) return;
+            let delay = Math.random() * 4000 + 3000;
+            aiInterval = setTimeout(() => {
+                if (isRunning) {
+                    let points = Math.random() > 0.65 ? 2 : 1;
+                    triggerHit('red', points);
+                    scheduleAiAttack();
+                }
+            }, delay);
+        }
+
+        // End Round Logic
+        function endRound() {
+            toggleTimer();
+            playBeep('buzzer');
+
+            if (currentRound < totalRounds) {
+                currentRound++;
+                timeLeft = 120;
+                document.getElementById('roundDisplay').innerText = currentRound;
+                updateTimerDisplay();
+            } else {
+                let winner = scores.blue > scores.red ? "BLUE CORNER" : (scores.red > scores.blue ? "RED CORNER" : "DRAW");
+                alert(`PERTANDINGAN SELESAI!\nPemenang: ${winner}`);
+            }
+        }
+
+        // Reset Match
+        function resetMatch() {
+            if (isRunning) toggleTimer();
+            scores = { blue: 0, red: 0 };
+            gamJeoms = { blue: 0, red: 0 };
+            currentRound = 1;
+            timeLeft = 120;
+
+            document.getElementById('blueScore').innerText = '0';
+            document.getElementById('redScore').innerText = '0';
+            document.getElementById('blueGamVal').innerText = '0';
+            document.getElementById('redGamVal').innerText = '0';
+            document.getElementById('blueGamDot1').className = "w-4 h-4 rounded-full border border-zinc-400 bg-zinc-900";
+            document.getElementById('blueGamDot2').className = "w-4 h-4 rounded-full border border-zinc-400 bg-zinc-900";
+            document.getElementById('redGamDot1').className = "w-4 h-4 rounded-full border border-zinc-400 bg-zinc-900";
+            document.getElementById('redGamDot2').className = "w-4 h-4 rounded-full border border-zinc-400 bg-zinc-900";
+            document.getElementById('roundDisplay').innerText = '1';
+            updateTimerDisplay();
+        }
+    </script>
+</body>
+</html>
